@@ -8,11 +8,8 @@ The project is intended for users who want to run their own AI models on cloud G
 
 - Automated installation of Ollama and Open WebUI
 - Downloads and configures GLM-4.5-Air-Derestricted (Q4_K_M)
-- NVIDIA GPU detection
+- GPU detection
 - Automatic startup of required services
-- Persistent storage for models and application data
-- Reusable setup for new Runpod instances
-- Basic service health checks and logging
 
 ## Requirements
 
