@@ -16,7 +16,7 @@ The project is intended for temporary GPU pods: create an instance, run the scri
 
 ## Requirements
 
-- Runpod GPU pod with a compatible NVIDIA GPU and 120 GB memory
+- Runpod GPU pod with a compatible NVIDIA GPU 
 - Ubuntu-based environment (the Runpod PyTorch template is recommended)
 - Python 3
 - Enough VRAM and disk space for your chosen model
