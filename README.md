@@ -1,87 +1,112 @@
 # OwnAI
 
-OwnAI is a Python-based setup script for deploying a self-hosted AI environment on Runpod. It automates the installation and configuration of Ollama, Open WebUI, and a locally hosted language model.
+OwnAI is a Python setup script for quickly deploying a self-hosted AI environment on Runpod. It installs Ollama and Open WebUI and downloads a configurable language model.
 
-The project is intended for users who want to run their own AI models on cloud GPUs without manually setting up the entire environment each time.
+The project is intended for temporary GPU pods: create an instance, run the script, use the model for a short period, and delete the pod when you're done.
 
 ## Features
 
-- Automated installation of Ollama and Open WebUI
-- Downloads and configures GLM-4.5-Air-Derestricted (Q4_K_M)
-- GPU detection
-- Automatic startup of required services
+- Installs Ollama and Open WebUI
+- Downloads `gurubot/GLM-4.5-Air-Derestricted:Q4_K_M` by default
+- Lets you change the model in `ownai.py`
+- Checks for an NVIDIA GPU
+- Starts the required services and checks their availability
+- Keeps model files, application data, and logs under `/workspace` by default
+- Can be rerun on a fresh Runpod instance
 
 ## Requirements
 
-- Runpod GPU instance with a compatible NVIDIA GPU
-- Ubuntu-based environment (Runpod PyTorch template recommended)
+- Runpod GPU pod with a compatible NVIDIA GPU and 120 GB memory
+- Ubuntu-based environment (the Runpod PyTorch template is recommended)
 - Python 3
-- At least 96 GB GPU memory recommended for the configured model
-- Sufficient disk space for model weights and application data
+- Enough VRAM and disk space for your chosen model
+- **HTTP port `8080` exposed in Runpod before starting the setup**
+
+The default model is large; a GPU with 96 GB VRAM is a practical choice. Smaller Ollama models can run on GPUs with less memory.
 
 ## Installation
 
-Clone the repository:
+Before deploying your pod, add **`8080`** to **Expose HTTP Ports** in the Runpod pod configuration. Open WebUI uses this port. Without it, the Runpod HTTP proxy will not be able to reach the interface.
+
+Open your Runpod terminal and run:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/OwnAI.git
+apt-get update && apt-get install -y git
+cd /workspace
+git clone https://github.com/EricAnslinger/OwnAI.git
 cd OwnAI
-```
-
-Run the setup script:
-
-```bash
 python3 ownai.py
 ```
 
-The script installs the required components, downloads the configured model, and starts the services. Existing installations are reused where possible.
+The script runs installation and download commands sequentially and waits for each command to finish. Existing components are reused where possible.
+
+## Changing the model
+
+You can select a different model directly in `ownai.py`. Find the model setting and replace its Ollama identifier:
+
+```python
+model: str = "gurubot/GLM-4.5-Air-Derestricted:Q4_K_M"
+```
+
+For example:
+
+```python
+model: str = "qwen3:32b"
+```
+
+Use a model available through Ollama, and choose a GPU with enough VRAM for its size and context length.
 
 ## Usage
 
-Once the installation is complete, Open WebUI can be accessed through port `8080`.
+Once installation finishes, open Open WebUI through your pod's Runpod HTTP proxy link:
 
-For Runpod, expose port `8080` under the pod's HTTP port settings and open the corresponding proxy URL.
+```text
+https://YOUR-POD-ID-8080.proxy.runpod.net
+```
 
-Ollama runs locally on port `11434`.
+Ollama listens locally on port `11434`.
 
-To check installed models:
+Check which models are installed:
 
 ```bash
 ollama list
 ```
 
-To check GPU utilization:
+Check which model is currently loaded and whether it is running on the GPU:
 
 ```bash
 ollama ps
 ```
 
-To start the environment again after a pod restart:
+If your pod restarts and the files are still present, rerun the setup script:
 
 ```bash
+cd /workspace/OwnAI
 python3 ownai.py
 ```
 
-## Configuration
+## Configuration and storage
 
-OwnAI uses `/workspace` as its default installation directory.
-
-A different directory can be configured using the `OWNAI_HOME` environment variable:
+OwnAI defaults to `/workspace`. You can choose another base directory with `OWNAI_HOME`:
 
 ```bash
 export OWNAI_HOME=/workspace/ownai
 python3 ownai.py
 ```
 
-Application data, model files, and logs are stored under the configured directory.
+Model downloads, Open WebUI data, and logs are stored under the configured directory.
 
-For persistent storage across pod deletion, use a separate Runpod Network Volume or back up the required files externally.
+## Temporary deployments
+
+OwnAI is designed for situations where you need your own AI model for a limited time, not for maintaining a permanent server.
+
+The workflow is to start a GPU pod, install OwnAI, use the model, and terminate the pod afterward. This avoids paying for an idle GPU. A future pod can be provisioned and configured again using the same script.
+
+**Deleting a pod can delete local model files, chat history, and application settings.** Back up anything you need or attach a separate Runpod Network Volume if you want data to survive pod deletion. Network Volumes may continue to incur charges after the GPU pod is removed.
 
 ## Security
 
-Open WebUI should be protected with user authentication. Public registration should be disabled after the administrator account has been created.
-
-Do not expose the Ollama API directly to the internet or commit credentials, API keys, or application secrets to the repository.
+Create an Open WebUI administrator account and disable public sign-ups afterward. Runpod proxy links can be publicly accessible, so protect the interface with a strong password or use a private access method. Do not expose Ollama's port `11434` publicly or commit secrets, API keys, or private keys to the repository.
 
 ## Author
 
